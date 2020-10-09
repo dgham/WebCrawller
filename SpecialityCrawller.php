@@ -14,7 +14,7 @@ $html = curl_exec($ch);
 curl_close($ch);
 $specialitys = json_decode(($html), true);
 for ($i = 0; $i < 28; $i++) {
-    $speciality_name = $specialitys[$i]['name_l1'];
+    $speciality_name = strtoupper($specialitys[$i]['name_l1']);
     $speciality_description = $specialitys[$i]['description_l1'];
     $speciality_name=str_replace(",", " ", $speciality_name);
     $speciality_name=str_replace("'", "` ", $speciality_name);

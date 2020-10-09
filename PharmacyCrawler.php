@@ -71,12 +71,8 @@ function Utf8_ansi($valor = '')
     );
     return strtr($valor, $utf8_ansi2);
 }
-<<<<<<< HEAD
 echo 'Loading data from websites...';
-=======
 
->>>>>>> origin
-$i = null;
 $country = array(
     'tunis', 'sfax', 'sousse', 'monastir', 'ariana', 'ben-arous', 'nabeul', 'mahdia',
     'kairouan', 'bizerte', 'medenine', 'mannouba', 'gabes', 'beja', 'gafsa', 'jendouba', 'le-Kef', 'sidi-bouzid',
@@ -85,94 +81,156 @@ $country = array(
 $status = array(
     'jour', 'nuit', 'garde'
 );
-$repeat=0;
-while($repeat<50){
-$loop = \React\EventLoop\Factory::create();
-$factory = new \React\MySQL\Factory($loop);
-$brower = new Browser($loop);
+for ($i = 0; $i <= 2; $i++) {
 foreach ($status as $data) {
-<<<<<<< HEAD
-   echo'
-https://www.med.tn/pharmacie/' . $data.'..';
-for ($k = 0; $k <= 23; $k++) {
-    for ($i = 0; $i <= 100; $i++) {
-=======
     for ($k = 0; $k <= 23; $k++) {
-        for ($i = 0; $i <= 100; $i++) {
->>>>>>> origin
-            $brower->get('https://www.med.tn/pharmacie/' . $data . '/' . $country[$k])
-                ->then(function (ResponseInterface $response ,$country) {
-                    $crawler = new Crawler((string) $response->getbody());
-                    $pharmacytype = $crawler->filter('.practitioner-title')->text();
-                    $pharmacyname = $crawler->filter('.practitioner-name')->text();
-                    $pharmacyimage = $crawler->filter('.card-doctor-picture a img')->eq(0)->attr('src');
-                    $pharmacyimage = 'https://www.med.tn/' . $pharmacyimage;
-                    $pharmacystatus = $crawler->filter('.practitioner-speciality .text-success')->text();
-                    $pharmacyaddress = $crawler->filter('.practitioner-address')->text();
-                    $pharmacyaddress = str_replace(",", " ", $pharmacyaddress);
-                    $pharmacyaddress = str_replace("'", "`", $pharmacyaddress);
-                    $pharmacyname = str_replace(",", " ", $pharmacyname);
-                    $pharmacyname = str_replace("'", "` ", $pharmacyname);
-                    $pharmacyphone = $crawler->filter('.btn.btn-phone .hide-tel')->text();
-                    $servername = "localhost";
-                    $username = "amira";
-                    $password = "amira";
-                    $dbname = "g_health24";
-                    try {
-                        $conn = new PDO("mysql:host=$servername;dbname=$dbname", $username, $password);
-                        // set the PDO error mode to exception
-                        $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-                        $sql = $conn->prepare("SELECT * from wp_pharmacy where pharmacy_name LIKE '%$pharmacyname%' and pharmacy_address LIKE '%pharmacyaddress%'");
-                        $sql->execute();
-                        if ($sql->rowCount() > 0) {
-                            echo '';
-                        } else {
-                            $conn = new PDO("mysql:host=$servername;dbname=$dbname;charset=UTF8", $username, $password);
-                            // set the PDO error mode to exception
-                            $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-                            $sql = "INSERT INTO wp_pharmacy (pharmacy_id, pharmacy_name,pharmacy_type,pharmacy_address,pharmacy_country,phone,status,picture,created_at) 
-                            VALUES (0,'$pharmacyname','$pharmacytype','$pharmacyaddress','Tunisia','$pharmacyphone','$pharmacystatus','$pharmacyimage',now())";
-                            // use exec() because no results are returned
-<<<<<<< HEAD
-                           
-                            $conn->exec($sql);
-                            echo '#';
-=======
-                            echo '#';
-                            $conn->exec($sql);
->>>>>>> origin
-                        }
-                        $conn = null;
-                    } catch (Exception $e) {
-                        echo '.';
-                    }
-                    $conn = null;
-                });
+        echo '
+https://www.med.tn/pharmacie/' . $data . '/' . $country[$k];
+            $html = file_get_contents('https://www.med.tn/pharmacie/' . $data . '/' . $country[$k]);
+            $doc = new \DOMDocument('1.0', 'UTF-8');
+            // set error level
+            $internalErrors = libxml_use_internal_errors(true);
+            $doc->loadHTML($html);
+            $xpath = new \DOMXpath($doc);
+            $articles = $xpath->query('//div[@class="card-doctor-picture"]');
+            $links = [];
+            foreach ($articles as $container) {
+                $arr = $container->getElementsByTagName("a");
+                foreach ($arr as $item) {
+                    $href =  $item->getAttribute("href");
+                    $text = trim(preg_replace("/[\r\n]+/", " ", $item->nodeValue));
+                    $loop = \React\EventLoop\Factory::create();
+                    $factory = new \React\MySQL\Factory($loop);
+                    $brower = new Browser($loop);
+                    $brower->get($href)
+                        ->then(function (ResponseInterface $response) {
+                            $crawler = new Crawler((string) $response->getbody());
+                            $pharmacy_name = $crawler->filter('.doctitle')->text();
+                            $pharmacy_type = $crawler->filter('.docsubtitle')->text();
+                            $pharmacy_address = $crawler->filter('.pf-itempage-sidebarinfo-elurl.pf-itempage-sidebarinfo-elitem')->text();
+                            $pharmacy_phone = $crawler->filter('.pf-itempage-sidebarinfo-elurl.pf-itempage-sidebarinfo-elitem a')->text();;
+                            $location = $crawler->filter('.pf-itempage-maparea.pf-itempage-elements iframe')->attr('src');
+                            $location = str_replace('https://maps.google.com/maps?q=', '{lantitude:', $location);
+                            $location = str_replace('&hl=fr&z=14&output=embed', '', $location);
+                            $location = str_replace(',', ',longitude:', $location);
+                            $location = $location . '}';
+                            $picture = $crawler->filter('.docimage a img')->attr('src');
+                            $city = $crawler->filter('.pf-breadcrumbs.pf-breadcrumbs-special ul li span')->extract(['_text']);
+                            $city = $city[2];
+                            $servername = "localhost";
+                            $username = "amira";
+                            $password = "amira";
+                            $dbname = "g_health24";
+                            try {
+                                $conn = new PDO("mysql:host=$servername;dbname=$dbname", $username, $password);
+                                // set the PDO error mode to exception
+                                $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+                                $sql = $conn->prepare("SELECT * from wp_pharmacy where pharmacy_name LIKE '%$pharmacy_name%' and pharmacy_address LIKE '%$pharmacy_address%'");
+                                $sql->execute();
+                                if ($sql->rowCount() > 0) {
+                                    echo '';
+                                } else {
+                                    $conn = new PDO("mysql:host=$servername;dbname=$dbname;charset=UTF8", $username, $password);
+                                    // set the PDO error mode to exception
+                                    $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+                                    $sql = "INSERT INTO wp_pharmacy (pharmacy_id, pharmacy_name,pharmacy_type,pharmacy_address,pharmacy_country,
+                            pharmacy_city,pharmacy_location,phone,picture,created_at) 
+                            VALUES (0,'$pharmacy_name','$pharmacy_type','$pharmacy_address','Tunisia','$city','$location','$pharmacy_phone','$picture',now())";
+                                    // use exec() because no results are returned
+                                    $conn->exec($sql);
+                                    echo '#';
+                                }
+                                $conn = null;
+                            } catch (Exception $e) {
+                                echo '';
+                            }
+                            $conn = null;
+                        });
+                    $loop->run();
+                }
+            }
         }
-<<<<<<< HEAD
+    }
+}
+
+
+
+
+// $i = null;
+// $country = array(
+//     'tunis', 'sfax', 'sousse', 'monastir', 'ariana', 'ben-arous', 'nabeul', 'mahdia',
+//     'kairouan', 'bizerte', 'medenine', 'mannouba', 'gabes', 'beja', 'gafsa', 'jendouba', 'le-Kef', 'sidi-bouzid',
+//     'kasserine', 'zaghouan', 'siliana', 'kebili', 'tataouine', 'tozeur',
+// );
+// $status = array(
+//     'jour', 'nuit', 'garde'
+// );
+// $repeat=0;
+// while($repeat<50){
+// $loop = \React\EventLoop\Factory::create();
+// $factory = new \React\MySQL\Factory($loop);
+// $brower = new Browser($loop);
+// foreach ($status as $data) {
+//    echo'
+// https://www.med.tn/pharmacie/' . $data.'..';
+// for ($k = 0; $k <= 23; $k++) {
+//     for ($i = 0; $i <= 100; $i++) {
+//             $brower->get('https://www.med.tn/pharmacie/' . $data . '/' . $country[$k])
+//                 ->then(function (ResponseInterface $response ,$country) {
+//                     $crawler = new Crawler((string) $response->getbody());
+//                     $pharmacytype = $crawler->filter('.practitioner-title')->text();
+//                     $pharmacyname = $crawler->filter('.practitioner-name')->text();
+//                     $pharmacyimage = $crawler->filter('.card-doctor-picture a img')->eq(0)->attr('src');
+//                     $pharmacyimage = 'https://www.med.tn/' . $pharmacyimage;
+//                     $pharmacystatus = $crawler->filter('.practitioner-speciality .text-success')->text();
+//                     $pharmacyaddress = $crawler->filter('.practitioner-address')->text();
+//                     $pharmacyaddress = str_replace(",", " ", $pharmacyaddress);
+//                     $pharmacyaddress = str_replace("'", "`", $pharmacyaddress);
+//                     $pharmacyname = str_replace(",", " ", $pharmacyname);
+//                     $pharmacyname = str_replace("'", "` ", $pharmacyname);
+//                     $pharmacyphone = $crawler->filter('.btn.btn-phone .hide-tel')->text();
+//                     $servername = "localhost";
+//                     $username = "amira";
+//                     $password = "amira";
+//                     $dbname = "g_health24";
+//                     try {
+//                         $conn = new PDO("mysql:host=$servername;dbname=$dbname", $username, $password);
+//                         // set the PDO error mode to exception
+//                         $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+//                         $sql = $conn->prepare("SELECT * from wp_pharmacy where pharmacy_name LIKE '%$pharmacyname%' and pharmacy_address LIKE '%pharmacyaddress%'");
+//                         $sql->execute();
+//                         if ($sql->rowCount() > 0) {
+//                             echo '';
+//                         } else {
+//                             $conn = new PDO("mysql:host=$servername;dbname=$dbname;charset=UTF8", $username, $password);
+//                             // set the PDO error mode to exception
+//                             $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+//                             $sql = "INSERT INTO wp_pharmacy (pharmacy_id, pharmacy_name,pharmacy_type,pharmacy_address,pharmacy_country,phone,status,picture,created_at) 
+//                             VALUES (0,'$pharmacyname','$pharmacytype','$pharmacyaddress','Tunisia','$pharmacyphone','$pharmacystatus','$pharmacyimage',now())";
+//                             // use exec() because no results are returned
+                           
+//                             $conn->exec($sql);
+//                             echo '#';
+//                         }
+//                         $conn = null;
+//                     } catch (Exception $e) {
+//                         echo '.';
+//                     }
+//                     $conn = null;
+//                 });
+//         }
     
 
-$loop->run();
-$repeat++;
-}
-}
-}
+// $loop->run();
+// $repeat++;
+// }
+// }
+// }
 $loop = \React\EventLoop\Factory::create();
 $factory = new \React\MySQL\Factory($loop);
 $brower = new Browser($loop);
 echo'
 https://psychologie-sante.tn/pharmacies-region-du-centre-de-la-tunisie/ ...';
-=======
-    }
-}
-$loop->run();
-$repeat++;
-}
-
-$loop = \React\EventLoop\Factory::create();
-$factory = new \React\MySQL\Factory($loop);
-$brower = new Browser($loop);
->>>>>>> origin
     $brower->get('https://psychologie-sante.tn/pharmacies-region-du-centre-de-la-tunisie/')
         ->then(function (ResponseInterface $response) {
             $crawler = new Crawler((string) $response->getbody());
@@ -222,7 +280,27 @@ $brower = new Browser($loop);
             }
         });
 $loop->run();
-<<<<<<< HEAD
+
+
+
+
+
+for($i=0;$i<7;$i++){
+$html = file_get_contents('https://annuairepro-tunisie.com/recherche-entreprise-pharmacie.html?page='.$i);
+$doc = new \DOMDocument('1.0', 'UTF-8');
+// set error level
+$internalErrors = libxml_use_internal_errors(true);
+$doc->loadHTML($html);
+$xpath = new \DOMXpath($doc);
+$articles = $xpath->query('//div[@class="title"]');
+$links = [];
+foreach ($articles as $container) {
+    $arr = $container->getElementsByTagName("a");
+    foreach ($arr as $item) {
+        $href =  $item->getAttribute("href");
+        $text = trim(preg_replace("/[\r\n]+/", " ", $item->nodeValue));
+dump($href);
+die;
 
 $loop = \React\EventLoop\Factory::create();
 $factory = new \React\MySQL\Factory($loop);
@@ -230,15 +308,6 @@ $brower = new Browser($loop);
 echo'
 https://annuairepro-tunisie.com/recherche-entreprise-pharmacie.html ...';
 for ($nb = 1; $nb < 8; $nb++) {
-
-=======
-
-$loop = \React\EventLoop\Factory::create();
-$factory = new \React\MySQL\Factory($loop);
-$brower = new Browser($loop);
-for ($nb = 1; $nb < 8; $nb++) {
-
->>>>>>> origin
     $brower->get('https://annuairepro-tunisie.com/recherche-entreprise-pharmacie.html?page=' . $nb)
         ->then(function (ResponseInterface $response) {
             $crawler = new Crawler((string) $response->getbody());
@@ -280,62 +349,56 @@ for ($nb = 1; $nb < 8; $nb++) {
         });
 }
 $loop->run();
-
-
-$loop = \React\EventLoop\Factory::create();
-$factory = new \React\MySQL\Factory($loop);
-$brower = new Browser($loop);
-<<<<<<< HEAD
-echo'
-https://tunisie-medicale.com/index.php/pharmacie/index/...';
-=======
->>>>>>> origin
-for ($nb = 1; $nb < 20; $nb++) {
-    $brower->get('https://tunisie-medicale.com/index.php/pharmacie/index/' . $nb)
-        ->then(function (ResponseInterface $response) {
-            $crawler = new Crawler((string) $response->getbody());
-            $name = $crawler->filter('li h2 a')->attr('title');
-            $name = str_replace(",", " ", $name);
-            $name = str_replace("'", "` ", $name);
-            $type = $crawler->filter('.team_widget h3')->text();
-            $type = str_replace("Phar…", "pharmacie", $type);
-            $address = $crawler->filter('.doctor-details')->text();
-            $address = str_replace(",", " ", $address);
-            $address = str_replace("'", "` ", $address);
-            $mapurl = $crawler->filter('.doctor-details a')->attr('href');
-            $servername = "localhost";
-            $username = "amira";
-            $password = "amira";
-            $dbname = "g_health24";
-            try {
-                $conn = new PDO("mysql:host=$servername;dbname=$dbname", $username, $password);
-                // set the PDO error mode to exception
-                $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-                $sql = $conn->prepare("SELECT * from wp_pharmacy where pharmacy_name LIKE '%$name%' and pharmacy_address like '%$address%'");
-                $sql->execute();
-                if ($sql->rowCount() > 0) {
-                    echo '';
-                } else {
-                    $conn = new PDO("mysql:host=$servername;dbname=$dbname;charset=UTF8", $username, $password);
-                    // set the PDO error mode to exception
-                    $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-                    $sql = "INSERT INTO wp_pharmacy (pharmacy_id, pharmacy_name,pharmacy_type,pharmacy_address,pharmacy_country,map_url,created_at) 
-                            VALUES (0,'$name','$type','$address','Tunsia','$mapurl',now())";
-                    // use exec() because no results are returned
-<<<<<<< HEAD
-                 
-                    $conn->exec($sql);
-                    echo '#';
-=======
-                    echo '#';
-                    $conn->exec($sql);
->>>>>>> origin
-                }
-                $conn = null;
-            } catch (Exception $e) {
-                echo '.';
-            }
-            $conn = null;
-        });
+    }
 }
-$loop->run();
+}
+
+// $loop = \React\EventLoop\Factory::create();
+// $factory = new \React\MySQL\Factory($loop);
+// $brower = new Browser($loop);
+// echo'
+// https://tunisie-medicale.com/index.php/pharmacie/index/...';
+// for ($nb = 1; $nb < 20; $nb++) {
+//     $brower->get('https://tunisie-medicale.com/index.php/pharmacie/index/' . $nb)
+//         ->then(function (ResponseInterface $response) {
+//             $crawler = new Crawler((string) $response->getbody());
+//             $name = $crawler->filter('li h2 a')->attr('title');
+//             $name = str_replace(",", " ", $name);
+//             $name = str_replace("'", "` ", $name);
+//             $type = $crawler->filter('.team_widget h3')->text();
+//             $type = str_replace("Phar…", "pharmacie", $type);
+//             $address = $crawler->filter('.doctor-details')->text();
+//             $address = str_replace(",", " ", $address);
+//             $address = str_replace("'", "` ", $address);
+//             $mapurl = $crawler->filter('.doctor-details a')->attr('href');
+//             $servername = "localhost";
+//             $username = "amira";
+//             $password = "amira";
+//             $dbname = "g_health24";
+//             try {
+//                 $conn = new PDO("mysql:host=$servername;dbname=$dbname", $username, $password);
+//                 // set the PDO error mode to exception
+//                 $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+//                 $sql = $conn->prepare("SELECT * from wp_pharmacy where pharmacy_name LIKE '%$name%' and pharmacy_address like '%$address%'");
+//                 $sql->execute();
+//                 if ($sql->rowCount() > 0) {
+//                     echo '';
+//                 } else {
+//                     $conn = new PDO("mysql:host=$servername;dbname=$dbname;charset=UTF8", $username, $password);
+//                     // set the PDO error mode to exception
+//                     $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+//                     $sql = "INSERT INTO wp_pharmacy (pharmacy_id, pharmacy_name,pharmacy_type,pharmacy_address,pharmacy_country,map_url,created_at) 
+//                             VALUES (0,'$name','$type','$address','Tunsia','$mapurl',now())";
+//                     // use exec() because no results are returned
+                 
+//                     $conn->exec($sql);
+//                     echo '#';
+//                 }
+//                 $conn = null;
+//             } catch (Exception $e) {
+//                 echo '.';
+//             }
+//             $conn = null;
+//         });
+// }
+// $loop->run();

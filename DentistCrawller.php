@@ -74,7 +74,7 @@ echo 'Loading data';
 try {
     for ($i = 0; $i < 2841; $i = $i + 20) {
         echo '
-Fetching: https://tunisie-medicale.com/index.php/dentiste/index/'.$i .' ...';
+Fetching: https://tunisie-medicale.com/index.php/dentiste/index/' . $i . ' ...';
         $html = file_get_contents('https://tunisie-medicale.com/index.php/dentiste/index/' . $i);
         $doc = new \DOMDocument('1.0', 'UTF-8');
         // set error level
@@ -105,17 +105,17 @@ Fetching: https://tunisie-medicale.com/index.php/dentiste/index/'.$i .' ...';
                         $content = str_replace("\n", '', $response->getbody());
                         $content = str_replace("\r", '', $content);
                         $content = str_replace("\t", '', $content);
-                        preg_match_all('`lat: (.*),                    lng: (.*)                };`', $content, $matches);              
-                           if ($matches[0] == null){
+                        preg_match_all('`lat: (.*),                    lng: (.*)                };`', $content, $matches);
+                        if ($matches[0] == null) {
                             $lat = '0';
                             $long = '0';
-                            $location=$lat.','.$long;   
-                        }else{
+                            $location = $lat . ',' . $long;
+                        } else {
                             $lat = $matches[1][0];
                             $long = $matches[2][0];
-                            $location=$lat.','.$long;
+                            $location = $lat . ',' . $long;
                         }
-                   
+
                         $specility = 'Dentist';
                         $address = utf8_decode($crawler->filter('.contact_details_1 li a')->text());
                         $address = str_replace(",", " ", $address);
@@ -150,7 +150,6 @@ Fetching: https://tunisie-medicale.com/index.php/dentiste/index/'.$i .' ...';
                             echo '';
                         }
                         $conn = null;
-                    
                     });
 
                 $loop->run();
