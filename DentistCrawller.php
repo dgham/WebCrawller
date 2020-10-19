@@ -70,7 +70,13 @@ function Utf8_ansi($valor = '')
     );
     return strtr($valor, $utf8_ansi2);
 }
+
 echo 'Loading data';
+
+
+
+
+
 try {
     for ($i = 0; $i < 2841; $i = $i + 20) {
         echo '
@@ -101,21 +107,19 @@ Fetching: https://tunisie-medicale.com/index.php/dentiste/index/' . $i . ' ...';
                         $region =  utf8_decode($crawler->filter('p[itemprop=addressLocality]')->text());
                         $region = str_replace(",", " ", $region);
                         $region = str_replace("'", "` ", $region);
-                        $location = $crawler->filter('script')->extract(['_text']);
                         $content = str_replace("\n", '', $response->getbody());
                         $content = str_replace("\r", '', $content);
                         $content = str_replace("\t", '', $content);
                         preg_match_all('`lat: (.*),                    lng: (.*)                };`', $content, $matches);
                         if ($matches[0] == null) {
-                            $lat = '0';
-                            $long = '0';
-                            $location = $lat . ',' . $long;
+                            $latitude = null;
+                            $longitude = null;
+                           
                         } else {
-                            $lat = $matches[1][0];
-                            $long = $matches[2][0];
-                            $location = $lat . ',' . $long;
+                            $latitude = $matches[1][0];
+                            $longitude = $matches[2][0];
+                        
                         }
-
                         $specility = 'Dentist';
                         $address = utf8_decode($crawler->filter('.contact_details_1 li a')->text());
                         $address = str_replace(",", " ", $address);
@@ -139,8 +143,8 @@ Fetching: https://tunisie-medicale.com/index.php/dentiste/index/' . $i . ' ...';
                                 // set the PDO error mode to exception
                                 $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
                                 $sql = "INSERT INTO wp_dentist (dentist_id, dentist_name,dentist_speciality,dentist_address,dentist_country,
-                                dentist_region,dentist_location,dentist_phone,created_at) 
-                            VALUES (0,'$name','$specility','$address','$country','$region','$location','$phone',now())";
+                                dentist_region,latitude,longitude,dentist_phone,created_at) 
+                            VALUES (0,'$name','$specility','$address','$country','$region','$latitude','$longitude','$phone',now())";
                                 // use exec() because no results are returned
                                 $conn->exec($sql);
                                 echo '#';
